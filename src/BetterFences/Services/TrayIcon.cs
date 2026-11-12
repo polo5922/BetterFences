@@ -33,7 +33,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_startup);
         _shellMenu = new ToolStripMenuItem("Menu contextuel du bureau", null, (_, _) => ToggleShellMenu())
         {
-            ToolTipText = "Clic droit sur le bureau : Nouveau dossier BetterFences\nClic droit sur un dossier : Importer dans BetterFences",
+            ToolTipText = "Clic droit sur le bureau : Nouveau dossier BetterFences\nClic droit sur un dossier : Importer dans BetterFences\n(demande les droits administrateur)",
         };
         menu.Items.Add(_shellMenu);
         menu.Items.Add("Ouvrir le dossier des données", null, (_, _) =>
@@ -77,8 +77,13 @@ public sealed class TrayIcon : IDisposable
 
     private static void ToggleShellMenu()
     {
-        App.Config.ShellMenu = !ShellMenu.IsRegistered;
-        if (App.Config.ShellMenu) ShellMenu.Register(); else ShellMenu.Unregister();
+        // Écrit dans HKLM : Windows demande l'autorisation administrateur.
+        bool ok = ShellMenu.IsRegistered ? ShellMenu.Unregister() : ShellMenu.Register();
+        if (!ok)
+            System.Windows.MessageBox.Show(
+                "Le menu contextuel n'a pas été modifié (autorisation administrateur refusée ou impossible).",
+                "BetterFences", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+        App.Config.ShellMenu = ShellMenu.IsRegistered;
         ConfigStore.RequestSave();
     }
 

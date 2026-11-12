@@ -29,6 +29,12 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         Instance = this;
+        // Processus relancé avec les droits admin pour écrire le menu contextuel (HKLM) : rien d'autre.
+        if (ShellMenu.HandleElevatedArgs(e.Args) is int code)
+        {
+            Shutdown(code);
+            return;
+        }
         // Une instance par dossier de données (BETTERFENCES_DATA permet une instance de test à côté).
         // Hachage stable (string.GetHashCode change à chaque processus).
         var suffix = IsTestInstance
@@ -67,7 +73,7 @@ public partial class App : Application
         _tray = new TrayIcon(this);
         foreach (var f in Config.Folders) ShowFolder(f);
         InstanceChannel.Listen(HandleCommand);
-        if (Config.ShellMenu && !IsTestInstance) ShellMenu.Register(); // met à jour le chemin de l'exe
+        if (!IsTestInstance) ShellMenu.RemoveLegacyUserKeys();
 
         if (Snapshot.Directory != null) Snapshot.Run(this);
         else if (firstRun) Dispatcher.BeginInvoke(FirstRun, DispatcherPriority.ApplicationIdle);

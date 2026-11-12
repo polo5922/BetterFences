@@ -36,6 +36,7 @@ Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 [Tasks]
 Name: "startup"; Description: "Lancer BetterFences au démarrage de Windows"; GroupDescription: "Options :"
 Name: "desktopicon"; Description: "Créer un raccourci sur le bureau"; GroupDescription: "Options :"; Flags: unchecked
+Name: "shellmenu"; Description: "Ajouter BetterFences au clic droit du bureau et des dossiers (demande les droits administrateur)"; GroupDescription: "Options :"
 
 [Files]
 Source: "..\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -50,6 +51,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
   ValueData: """{app}\{#AppExe}"""; Tasks: startup; Flags: uninsdeletevalue
 
 [Run]
+; Entrées du menu contextuel (HKLM) : l'appli se relance avec les droits administrateur.
+Filename: "{app}\{#AppExe}"; Parameters: "--register-shell-menu"; Verb: "runas"; Tasks: shellmenu;   Flags: shellexec waituntilterminated runhidden; StatusMsg: "Ajout au menu contextuel..."
 Filename: "{app}\{#AppExe}"; Description: "Lancer BetterFences maintenant"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
@@ -72,8 +75,14 @@ begin
 end;
 
 function InitializeUninstall(): Boolean;
+var
+  Code: Integer;
 begin
   StopRunningApp();
+  // Entrées du menu contextuel écrites dans HKLM : retrait avec les droits administrateur.
+  if RegKeyExists(HKLM, 'Software\Classes\DesktopBackground\Shell\BetterFences.NewFolder') or
+     RegKeyExists(HKLM, 'Software\Classes\Directory\shell\BetterFences.Import') then
+    ShellExec('runas', ExpandConstant('{app}\{#AppExe}'), '--unregister-shell-menu', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Result := True;
 end;
 
@@ -83,7 +92,7 @@ begin
   if CurUninstallStep = usPostUninstall then
   begin
     RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', '{#AppName}');
-    // Entrées du menu contextuel de l'Explorateur ajoutées par l'appli.
+    // Anciennes entrées du menu contextuel (version 1.1.0, HKCU).
     RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\DesktopBackground\Shell\BetterFences.NewFolder');
     RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\Directory\shell\BetterFences.Import');
   end;
