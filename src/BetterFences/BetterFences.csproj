@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>BetterFences</AssemblyName>
+    <RootNamespace>BetterFences</RootNamespace>
+    <Version>1.0.0</Version>
+    <ApplicationIcon>Assets\BetterFences.ico</ApplicationIcon>
+    <Product>BetterFences</Product>
+    <Description>Dossiers d'applications pour le bureau Windows</Description>
+    <NoWarn>$(NoWarn);CA1416;WFO1000;WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\BetterFences.ico" LogicalName="BetterFences.ico" />
+  </ItemGroup>
+
+</Project>

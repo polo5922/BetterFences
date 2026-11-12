@@ -1,0 +1,167 @@
+<UserControl x:Class="BetterFences.Views.FolderContentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:m="clr-namespace:BetterFences.Models"
+             FontFamily="{StaticResource UiFont}"
+             Foreground="{StaticResource TextPrimary}"
+             AllowDrop="True"
+             DragOver="OnDragOver" Drop="OnDrop"
+             PreviewMouseRightButtonUp="OnRightClick">
+
+    <UserControl.Resources>
+        <!-- Liste horizontale sans barre de défilement visible -->
+        <ControlTemplate x:Key="HorizontalListTemplate" TargetType="ListBox">
+            <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                          PreviewMouseWheel="OnHorizontalWheel" Focusable="False">
+                <ItemsPresenter/>
+            </ScrollViewer>
+        </ControlTemplate>
+
+        <ItemsPanelTemplate x:Key="HorizontalPanel">
+            <StackPanel Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+
+        <!-- Onglet : pastille pleine -->
+        <Style x:Key="TabPill" TargetType="ListBoxItem">
+            <Setter Property="AllowDrop" Value="True"/>
+            <EventSetter Event="DragEnter" Handler="OnTabDragEnter"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" CornerRadius="15" Padding="14,5" Margin="0,0,6,0" Background="#14FFFFFF">
+                            <TextBlock x:Name="Txt" Text="{Binding Name}" FontSize="13" Foreground="{StaticResource TextSecondary}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#26FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background"
+                                        Value="{Binding DataContext.AccentBrush, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                <Setter TargetName="Txt" Property="Foreground" Value="White"/>
+                                <Setter TargetName="Txt" Property="FontWeight" Value="SemiBold"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Sous-onglet : petite puce contour -->
+        <Style x:Key="SubTabChip" TargetType="ListBoxItem">
+            <Setter Property="AllowDrop" Value="True"/>
+            <EventSetter Event="DragEnter" Handler="OnSubTabDragEnter"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" CornerRadius="11" Padding="10,2" Margin="0,0,5,0"
+                                BorderThickness="1" BorderBrush="#26FFFFFF" Background="Transparent">
+                            <TextBlock x:Name="Txt" Text="{Binding Name}" FontSize="11.5" Foreground="{StaticResource TextSecondary}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#14FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background"
+                                        Value="{Binding DataContext.SoftAccentBrush, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush"
+                                        Value="{Binding DataContext.AccentBrush, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                <Setter TargetName="Txt" Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Tuile d'application façon Android -->
+        <DataTemplate x:Key="ItemTemplate" DataType="{x:Type m:ShortcutItem}">
+            <Border x:Name="Tile" Tag="tile" Width="86" Height="94" CornerRadius="16" Margin="1"
+                    Background="Transparent" Cursor="Hand" ToolTip="{Binding Name}"
+                    PreviewMouseLeftButtonDown="OnItemMouseDown"
+                    PreviewMouseMove="OnItemMouseMove"
+                    PreviewMouseLeftButtonUp="OnItemMouseUp">
+                <StackPanel Margin="4,8,4,2">
+                    <Image Source="{Binding Icon}" Width="46" Height="46"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="{Binding Name}" FontSize="11.5" Margin="0,6,0,0" LineHeight="14"
+                               LineStackingStrategy="BlockLineHeight" MaxHeight="28"
+                               TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                               Foreground="{StaticResource TextPrimary}"/>
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <Trigger SourceName="Tile" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Tile" Property="Background" Value="{StaticResource Hover}"/>
+                </Trigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- En-tête : nom du dossier + menu -->
+        <DockPanel x:Name="Header" Margin="18,10,8,4" Background="Transparent"
+                   MouseLeftButtonDown="OnHeaderMouseDown">
+            <Button DockPanel.Dock="Right" Content="⋮" Style="{StaticResource RoundIconButton}"
+                    ToolTip="Options du dossier" Click="OnMenuButtonClick"/>
+            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"/>
+        </DockPanel>
+
+        <Grid x:Name="Body" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Onglets -->
+            <ListBox Grid.Row="0" Margin="14,2,14,4" Background="Transparent" BorderThickness="0"
+                     Template="{StaticResource HorizontalListTemplate}"
+                     ItemsPanel="{StaticResource HorizontalPanel}"
+                     ItemContainerStyle="{StaticResource TabPill}"
+                     ItemsSource="{Binding Tabs}"
+                     SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                     Visibility="{Binding Tabs.Count, Converter={StaticResource CountToVis}, ConverterParameter=2}"/>
+
+            <!-- Sous-onglets -->
+            <ListBox Grid.Row="1" Margin="16,2,14,4" Background="Transparent" BorderThickness="0"
+                     Template="{StaticResource HorizontalListTemplate}"
+                     ItemsPanel="{StaticResource HorizontalPanel}"
+                     ItemContainerStyle="{StaticResource SubTabChip}"
+                     ItemsSource="{Binding SelectedTab.SubTabs}"
+                     SelectedItem="{Binding SelectedTab.SelectedSubTab, Mode=TwoWay}"
+                     Visibility="{Binding SelectedTab.SubTabs.Count, Converter={StaticResource CountToVis}, ConverterParameter=2}"/>
+
+            <!-- Grille des raccourcis -->
+            <ScrollViewer x:Name="Scroller" Grid.Row="2" Margin="8,2,2,10" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                </ScrollViewer.Resources>
+                <Grid>
+                    <ItemsControl x:Name="ItemsHost" Margin="4,0,4,0"
+                                  ItemsSource="{Binding SelectedTab.SelectedSubTab.Items}"
+                                  ItemTemplate="{StaticResource ItemTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <TextBlock Text="Glissez des raccourcis ici" Margin="0,22,0,22" HorizontalAlignment="Center"
+                               FontSize="12.5" Foreground="{StaticResource TextSecondary}" IsHitTestVisible="False"
+                               Visibility="{Binding SelectedTab.SelectedSubTab.Items.Count, Converter={StaticResource CountToVis}, ConverterParameter=-1}"/>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</UserControl>
