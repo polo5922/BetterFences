@@ -10,7 +10,7 @@ public sealed class TrayIcon : IDisposable
 {
     private readonly NotifyIcon _icon;
     private readonly App _app;
-    private readonly ToolStripMenuItem _lock, _hide, _startup;
+    private readonly ToolStripMenuItem _lock, _hide, _startup, _shellMenu;
 
     public TrayIcon(App app)
     {
@@ -26,8 +26,16 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add("Importer depuis Fences…", null, (_, _) => _app.ImportFences());
         menu.Items.Add("Importer un dossier Windows…", null, (_, _) => _app.ImportWindowsFolder());
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Exporter ma configuration…", null, (_, _) => ConfigTransfer.Export());
+        menu.Items.Add("Importer une configuration…", null, (_, _) => ConfigTransfer.Import());
+        menu.Items.Add(new ToolStripSeparator());
         _startup = new ToolStripMenuItem("Lancer avec Windows", null, (_, _) => ToggleStartup());
         menu.Items.Add(_startup);
+        _shellMenu = new ToolStripMenuItem("Menu contextuel du bureau", null, (_, _) => ToggleShellMenu())
+        {
+            ToolTipText = "Clic droit sur le bureau : Nouveau dossier BetterFences\nClic droit sur un dossier : Importer dans BetterFences",
+        };
+        menu.Items.Add(_shellMenu);
         menu.Items.Add("Ouvrir le dossier des données", null, (_, _) =>
             Process.Start(new ProcessStartInfo("explorer.exe", $"\"{ConfigStore.DataDir}\"") { UseShellExecute = true }));
         menu.Items.Add(new ToolStripSeparator());
@@ -49,6 +57,7 @@ public sealed class TrayIcon : IDisposable
         _lock.Checked = App.Config.Locked;
         _hide.Text = _app.FoldersHidden ? "Afficher les dossiers" : "Masquer les dossiers";
         _startup.Checked = StartupService.IsEnabled;
+        _shellMenu.Checked = ShellMenu.IsRegistered;
     }
 
     private void ToggleLock()
@@ -64,6 +73,13 @@ public sealed class TrayIcon : IDisposable
     {
         try { StartupService.SetEnabled(!StartupService.IsEnabled); }
         catch (Exception ex) { Log.Error("Lancer avec Windows", ex); }
+    }
+
+    private static void ToggleShellMenu()
+    {
+        App.Config.ShellMenu = !ShellMenu.IsRegistered;
+        if (App.Config.ShellMenu) ShellMenu.Register(); else ShellMenu.Unregister();
+        ConfigStore.RequestSave();
     }
 
     /// <summary>Icône de l'appli (Assets/BetterFences.ico), à la taille des petites icônes du système.</summary>

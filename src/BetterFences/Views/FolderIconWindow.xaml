@@ -27,7 +27,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </Grid>
-        <TextBlock Text="{Binding Name}" Margin="2,6,2,4" FontSize="12" TextAlignment="Center"
+        <TextBlock x:Name="NameLabel" Text="{Binding Name}" Margin="2,6,2,4" FontSize="12" TextAlignment="Center"
                    TextWrapping="Wrap" TextTrimming="CharacterEllipsis" MaxHeight="32"
                    Foreground="White" Effect="{StaticResource TextShadow}"/>
     </StackPanel>

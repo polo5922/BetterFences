@@ -240,5 +240,7 @@ public class AppConfig
 {
     public int Version { get; set; } = 1;
     public bool Locked { get; set; }
+    /// <summary>Entrées BetterFences dans le menu contextuel de l'Explorateur.</summary>
+    public bool ShellMenu { get; set; } = true;
     public List<FolderModel> Folders { get; set; } = new();
 }

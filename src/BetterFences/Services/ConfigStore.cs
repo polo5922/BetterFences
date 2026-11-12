@@ -41,6 +41,9 @@ public static class ConfigStore
         return new AppConfig();
     }
 
+    public static string Serialize(AppConfig cfg) => JsonSerializer.Serialize(cfg, Options);
+    public static AppConfig? Deserialize(string json) => JsonSerializer.Deserialize<AppConfig>(json, Options);
+
     /// <summary>Sauvegarde différée (regroupe les modifications rapprochées).</summary>
     public static void RequestSave()
     {
@@ -60,7 +63,7 @@ public static class ConfigStore
         {
             Directory.CreateDirectory(DataDir);
             var tmp = ConfigPath + ".tmp";
-            File.WriteAllText(tmp, JsonSerializer.Serialize(App.Config, Options));
+            File.WriteAllText(tmp, Serialize(App.Config));
             if (File.Exists(ConfigPath))
                 File.Replace(tmp, ConfigPath, BackupPath, ignoreMetadataErrors: true);
             else

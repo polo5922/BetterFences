@@ -31,6 +31,27 @@ public partial class FolderContentView : UserControl
 
     private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e) => HeaderMouseDown?.Invoke(this, e);
 
+    private void OnNameMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2) return; // un simple clic laisse l'en-tête gérer le déplacement
+        e.Handled = true;
+        Dispatcher.BeginInvoke(() => FolderActions.RenameFolder(Folder));
+    }
+
+    private void OnTabDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not TabModel tab) return;
+        e.Handled = true;
+        Dispatcher.BeginInvoke(() => FolderActions.RenameTab(Folder, tab));
+    }
+
+    private void OnSubTabDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not SubTabModel sub) return;
+        e.Handled = true;
+        Dispatcher.BeginInvoke(() => FolderActions.RenameSubTab(Folder, sub));
+    }
+
     private void OnMenuButtonClick(object sender, RoutedEventArgs e)
     {
         var menu = MenuBuilder.ForFolder(Folder, IsPopup);

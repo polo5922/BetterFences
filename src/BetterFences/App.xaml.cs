@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
+using BetterFences.Interop;
 using BetterFences.Models;
 using BetterFences.Services;
 using BetterFences.Views;
@@ -29,12 +30,23 @@ public partial class App : Application
     {
         Instance = this;
         // Une instance par dossier de données (BETTERFENCES_DATA permet une instance de test à côté).
-        var mutexName = @"Local\BetterFences.SingleInstance";
-        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BETTERFENCES_DATA")))
-            mutexName += "." + (uint)ConfigStore.DataDir.ToLowerInvariant().GetHashCode();
-        _mutex = new Mutex(true, mutexName, out bool first);
+        // Hachage stable (string.GetHashCode change à chaque processus).
+        var suffix = IsTestInstance
+            ? "." + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(ConfigStore.DataDir.ToLowerInvariant())))[..12]
+            : "";
+        InstanceChannel.PipeName = $"BetterFences.{System.Diagnostics.Process.GetCurrentProcess().SessionId}{suffix}";
+        _mutex = new Mutex(true, @"Local\BetterFences.SingleInstance" + suffix, out bool first);
         if (!first)
         {
+            // Lancée depuis le menu contextuel : on transmet la commande à l'instance ouverte.
+            if (e.Args.Length > 0)
+            {
+                NativeMethods.AllowSetForegroundWindow(-1);
+                InstanceChannel.Send(e.Args);
+                Shutdown();
+                return;
+            }
             MessageBox.Show("BetterFences est déjà lancé (icône dans la zone de notification).", "BetterFences",
                 MessageBoxButton.OK, MessageBoxImage.Information);
             Shutdown();
@@ -54,9 +66,62 @@ public partial class App : Application
 
         _tray = new TrayIcon(this);
         foreach (var f in Config.Folders) ShowFolder(f);
+        InstanceChannel.Listen(HandleCommand);
+        if (Config.ShellMenu && !IsTestInstance) ShellMenu.Register(); // met à jour le chemin de l'exe
 
         if (Snapshot.Directory != null) Snapshot.Run(this);
         else if (firstRun) Dispatcher.BeginInvoke(FirstRun, DispatcherPriority.ApplicationIdle);
+        if (e.Args.Length > 0)
+            Dispatcher.BeginInvoke(() => HandleCommand(e.Args), DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>Instance de test (BETTERFENCES_DATA) : ne touche pas au registre de l'utilisateur.</summary>
+    public static bool IsTestInstance => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BETTERFENCES_DATA"));
+
+    /// <summary>Commandes reçues en ligne de commande (menu contextuel de l'Explorateur).</summary>
+    private void HandleCommand(string[] args)
+    {
+        if (args[0] == ShellMenu.NewFolderArg)
+            NewFolderAtCursor();
+        else if (args[0] == ShellMenu.ImportFolderArg && args.Length > 1 && Directory.Exists(args[1]))
+            ImportWindowsFolder(args[1]);
+        else if (args[0] == "--export-config" && args.Length > 1)
+        {
+            try { ConfigTransfer.WriteArchive(Path.GetFullPath(args[1])); }
+            catch (Exception ex) { Log.Error("Export de la configuration", ex); }
+        }
+        else if (args[0] == "--import-config" && args.Length > 1 && File.Exists(args[1]))
+            ConfigTransfer.Import(Path.GetFullPath(args[1]), null);
+    }
+
+    /// <summary>« Nouveau dossier BetterFences » depuis le bureau : créé sous la souris, puis nommé.</summary>
+    public void NewFolderAtCursor()
+    {
+        if (_hidden) SetFoldersHidden(false);
+        var f = FolderActions.NewFolder();
+        Dispatcher.BeginInvoke(() =>
+        {
+            PlaceAtCursor(f);
+            FolderActions.RenameFolder(f);
+        }, DispatcherPriority.Loaded);
+    }
+
+    /// <summary>Place la fenêtre d'un dossier sous le curseur, sans déborder de l'écran.</summary>
+    private void PlaceAtCursor(FolderModel f)
+    {
+        if (!_windows.TryGetValue(f.Id, out var w) || !w.IsVisible) return;
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(w).Handle;
+        if (hwnd == IntPtr.Zero || !NativeMethods.GetWindowRect(hwnd, out var r)) return;
+        var p = System.Windows.Forms.Cursor.Position;
+        var area = System.Windows.Forms.Screen.FromPoint(p).WorkingArea;
+        int width = r.Right - r.Left, height = r.Bottom - r.Top;
+        int x = Math.Clamp(p.X - width / 2, area.Left, Math.Max(area.Left, area.Right - width));
+        int y = Math.Clamp(p.Y - 20, area.Top, Math.Max(area.Top, area.Bottom - height));
+        NativeMethods.SetWindowPos(hwnd, IntPtr.Zero, x, y, 0, 0,
+            NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER | NativeMethods.SWP_NOACTIVATE);
+        f.X = w.Left;
+        f.Y = w.Top;
+        ConfigStore.RequestSave();
     }
 
     private void FirstRun()
@@ -137,6 +202,30 @@ public partial class App : Application
         foreach (var f in Config.Folders) ShowFolder(f);
     }
 
+    /// <summary>Remplace toute la configuration (import) et recrée les fenêtres.</summary>
+    public void ReplaceConfig(AppConfig cfg)
+    {
+        cfg.ShellMenu = Config.ShellMenu; // réglage propre à cette machine
+        ClosePopup();
+        foreach (var w in _windows.Values.ToList()) CloseWindow(w);
+        _windows.Clear();
+        Config = cfg;
+        foreach (var f in Config.Folders) f.EnsureValid();
+        if (_hidden) SetFoldersHidden(false);
+        foreach (var f in Config.Folders) ShowFolder(f);
+    }
+
+    public void AddFolders(IEnumerable<FolderModel> folders)
+    {
+        if (_hidden) SetFoldersHidden(false);
+        foreach (var f in folders)
+        {
+            f.EnsureValid();
+            Config.Folders.Add(f);
+            ShowFolder(f);
+        }
+    }
+
     // ---------- Popup (mode icône) ----------
 
     public void TogglePopup(FolderModel f, FolderIconWindow anchor)
@@ -163,6 +252,10 @@ public partial class App : Application
     }
 
     public void ClosePopup() => _popup?.SafeClose();
+
+    public bool IsPopupOpenOrJustClosed(FolderModel f)
+        => _popup?.Folder == f ||
+           (_lastPopupFolderId == f.Id && (DateTime.Now - _lastPopupClose).TotalMilliseconds < 300);
 
     /// <summary>Après une boîte de dialogue, rend le focus à la popup pour qu'elle se ferme normalement ensuite.</summary>
     public void ReactivatePopup() => _popup?.Activate();
@@ -204,11 +297,16 @@ public partial class App : Application
         }
     }
 
-    public void ImportWindowsFolder()
+    public void ImportWindowsFolder(string? dir = null)
     {
-        var dlg = new Microsoft.Win32.OpenFolderDialog { Title = "Choisir un dossier à importer" };
-        if (dlg.ShowDialog() != true) return;
-        var dir = dlg.FolderName;
+        bool fromShell = dir != null;
+        if (dir == null)
+        {
+            var dlg = new Microsoft.Win32.OpenFolderDialog { Title = "Choisir un dossier à importer" };
+            if (dlg.ShowDialog() != true) return;
+            dir = dlg.FolderName;
+        }
+        if (_hidden) SetFoldersHidden(false);
 
         var folder = new FolderModel
         {
@@ -230,6 +328,7 @@ public partial class App : Application
         folder.EnsureValid();
         Config.Folders.Add(folder);
         ShowFolder(folder);
+        if (fromShell) Dispatcher.BeginInvoke(() => PlaceAtCursor(folder), DispatcherPriority.Loaded);
         ConfigStore.SaveNow();
     }
 }

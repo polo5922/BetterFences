@@ -25,6 +25,7 @@
         <Style x:Key="TabPill" TargetType="ListBoxItem">
             <Setter Property="AllowDrop" Value="True"/>
             <EventSetter Event="DragEnter" Handler="OnTabDragEnter"/>
+            <EventSetter Event="MouseDoubleClick" Handler="OnTabDoubleClick"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -52,6 +53,7 @@
         <Style x:Key="SubTabChip" TargetType="ListBoxItem">
             <Setter Property="AllowDrop" Value="True"/>
             <EventSetter Event="DragEnter" Handler="OnSubTabDragEnter"/>
+            <EventSetter Event="MouseDoubleClick" Handler="OnSubTabDoubleClick"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -112,8 +114,10 @@
                    MouseLeftButtonDown="OnHeaderMouseDown">
             <Button DockPanel.Dock="Right" Content="⋮" Style="{StaticResource RoundIconButton}"
                     ToolTip="Options du dossier" Click="OnMenuButtonClick"/>
+            <!-- Double-clic sur le nom : renommer (ailleurs sur la barre : réduire le panneau) -->
             <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis"/>
+                       HorizontalAlignment="Left" Background="Transparent" TextTrimming="CharacterEllipsis"
+                       ToolTip="Double-cliquez pour renommer" MouseLeftButtonDown="OnNameMouseDown"/>
         </DockPanel>
 
         <Grid x:Name="Body" Grid.Row="1">

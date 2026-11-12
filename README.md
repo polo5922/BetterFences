@@ -28,6 +28,9 @@
 - **Rangement du bureau** : les raccourcis déposés sont déplacés dans `%AppData%\BetterFences\Items` et restaurés à leur emplacement d'origine si vous supprimez le dossier. Aucun fichier n'est jamais supprimé.
 - **Import depuis Fences** : retrouve vos fences, leurs onglets et leurs positions. La configuration Fences est seulement lue, jamais modifiée.
 - **Import d'un dossier Windows** : crée un dossier BetterFences à partir de n'importe quel répertoire.
+- **Menu contextuel de l'Explorateur** : clic droit sur le bureau → *Nouveau dossier BetterFences* (créé sous la souris), clic droit sur un dossier → *Importer dans BetterFences*. Sous Windows 11, ces entrées sont dans *Afficher plus d'options*.
+- **Renommer d'un double-clic** : sur le nom d'un dossier, d'un onglet ou d'un sous-onglet.
+- **Export / import de la configuration** : une archive `.zip` avec vos dossiers et les raccourcis rangés, pour une sauvegarde ou un autre PC. À l'import, remplacez la configuration actuelle (sauvegardée d'abord) ou ajoutez-y les dossiers.
 - **Collé au bureau** : les dossiers restent visibles après *Win + D* et n'apparaissent ni dans la barre des tâches ni dans *Alt + Tab*.
 - **Icônes nettes** : chaque icône est chargée dans sa plus grande taille disponible, y compris pour les raccourcis Steam ou Ubisoft.
 - **Zone de notification** : nouveau dossier, verrouillage des positions, masquer/afficher, imports, lancement avec Windows.
@@ -50,12 +53,14 @@ Au premier lancement, si une configuration Fences est trouvée, BetterFences pro
 
 | Action | Comment |
 | --- | --- |
-| Créer un dossier | Clic droit sur l'icône de la zone de notification → *Nouveau dossier* |
+| Créer un dossier | Clic droit sur le bureau → *Nouveau dossier BetterFences*, ou via l'icône de la zone de notification |
 | Ajouter des applis | Glisser-déposer depuis le bureau ou l'Explorateur |
 | Lancer une appli | Clic sur son icône |
 | Déplacer un dossier | Glisser sa barre de titre (ou sa tuile en mode icône) |
 | Passer en mode icône / panneau, renommer, couleur, onglets | Clic droit sur le dossier ou le bouton `⋮` |
-| Réduire un panneau | Double-clic sur sa barre de titre |
+| Renommer un dossier, un onglet, un sous-onglet | Double-clic sur son nom |
+| Réduire un panneau | Double-clic sur sa barre de titre, à côté du nom |
+| Sauvegarder / restaurer sa configuration | Zone de notification → *Exporter ma configuration…* / *Importer une configuration…* |
 | Masquer tous les dossiers | Double-clic sur l'icône de la zone de notification |
 
 Les données (configuration et raccourcis rangés) sont dans `%AppData%\BetterFences`. Elles sont conservées si vous désinstallez l'application.
@@ -76,6 +81,7 @@ Outils annexes :
 
 - `tools/make-icon.ps1` régénère l'icône de l'application.
 - La variable `BETTERFENCES_DATA=<dossier>` utilise un autre dossier de données (pratique pour tester sans toucher à sa configuration).
+- `BetterFences.exe --export-config <fichier.zip>` / `--import-config <fichier.zip>` exporte ou importe la configuration en ligne de commande.
 - La variable `BETTERFENCES_SNAPSHOT=<dossier>` enregistre chaque fenêtre en PNG transparent puis ferme l'appli (captures du README).
 
 ## Structure

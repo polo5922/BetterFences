@@ -10,7 +10,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>BetterFences</AssemblyName>
     <RootNamespace>BetterFences</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <ApplicationIcon>Assets\BetterFences.ico</ApplicationIcon>
     <Product>BetterFences</Product>
     <Description>Dossiers d'applications pour le bureau Windows</Description>

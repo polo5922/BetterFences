@@ -81,5 +81,10 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   // Retire aussi l'entrée de démarrage si elle a été ajoutée depuis le menu de l'appli.
   if CurUninstallStep = usPostUninstall then
+  begin
     RegDeleteValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Run', '{#AppName}');
+    // Entrées du menu contextuel de l'Explorateur ajoutées par l'appli.
+    RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\DesktopBackground\Shell\BetterFences.NewFolder');
+    RegDeleteKeyIncludingSubkeys(HKCU, 'Software\Classes\Directory\shell\BetterFences.Import');
+  end;
 end;
