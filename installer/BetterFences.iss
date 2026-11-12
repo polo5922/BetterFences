@@ -52,7 +52,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 ; Entrées du menu contextuel (HKLM) : l'appli se relance avec les droits administrateur.
-Filename: "{app}\{#AppExe}"; Parameters: "--register-shell-menu"; Verb: "runas"; Tasks: shellmenu;   Flags: shellexec waituntilterminated runhidden; StatusMsg: "Ajout au menu contextuel..."
+Filename: "{app}\{#AppExe}"; Parameters: "--register-shell-menu"; Verb: "runas"; Tasks: shellmenu; Check: ShellMenuMissing;   Flags: shellexec waituntilterminated runhidden; StatusMsg: "Ajout au menu contextuel..."
 Filename: "{app}\{#AppExe}"; Description: "Lancer BetterFences maintenant"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
@@ -60,6 +60,12 @@ Filename: "{app}\{#AppExe}"; Description: "Lancer BetterFences maintenant"; Flag
 Type: filesandordirs; Name: "{app}"
 
 [Code]
+// Évite une nouvelle demande d'autorisation à chaque mise à jour si les entrées existent déjà.
+function ShellMenuMissing(): Boolean;
+begin
+  Result := not RegKeyExists(HKLM, 'Software\Classes\DesktopBackground\Shell\BetterFences.NewFolder');
+end;
+
 procedure StopRunningApp();
 var
   Code: Integer;

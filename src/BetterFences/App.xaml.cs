@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +18,7 @@ public partial class App : Application
     public static AppConfig Config { get; private set; } = new();
 
     private Mutex? _mutex;
+    private bool _configLoaded;
     private TrayIcon? _tray;
     private readonly Dictionary<string, Window> _windows = new();
     private PopupWindow? _popup;
@@ -68,6 +69,7 @@ public partial class App : Application
 
         bool firstRun = !ConfigStore.ConfigExists;
         Config = ConfigStore.Load();
+        _configLoaded = true;
         foreach (var f in Config.Folders) f.EnsureValid();
 
         _tray = new TrayIcon(this);
@@ -149,7 +151,10 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        try { ConfigStore.SaveNow(); } catch (Exception ex) { Log.Error("Sauvegarde à la fermeture", ex); }
+        // Seule l'instance qui a chargé la configuration l'enregistre : une seconde instance
+        // (commande transmise, relance élevée) a une config vide qui écraserait la vraie.
+        if (_configLoaded)
+            try { ConfigStore.SaveNow(); } catch (Exception ex) { Log.Error("Sauvegarde à la fermeture", ex); }
         _tray?.Dispose();
         _mutex?.Dispose();
         base.OnExit(e);
