@@ -8,7 +8,8 @@ $version = ([xml](Get-Content $proj)).Project.PropertyGroup.Version | Where-Obje
 if (-not $version) { $version = '1.0.0' }
 
 if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
-dotnet publish $proj -c Release -r win-x64 --self-contained true -p:DebugType=none -o $publish
+# ReadyToRun : code précompilé, démarrage nettement plus rapide (moins de compilation JIT).
+dotnet publish $proj -c Release -r win-x64 --self-contained true -p:PublishReadyToRun=true -p:DebugType=none -o $publish
 if ($LASTEXITCODE -ne 0) { throw 'dotnet publish a échoué' }
 
 $iscc = @(

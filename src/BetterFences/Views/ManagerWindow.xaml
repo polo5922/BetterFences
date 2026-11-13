@@ -1,0 +1,516 @@
+<Window x:Class="BetterFences.Views.ManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="BetterFences" Width="980" Height="660" MinWidth="760" MinHeight="480"
+        WindowStartupLocation="CenterScreen" Background="#FF15171D"
+        FontFamily="{StaticResource UiFont}" Foreground="{StaticResource TextPrimary}"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="44" ResizeBorderThickness="6" GlassFrameThickness="0"
+                            CornerRadius="0" UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="Accent" Color="#4F7CFF"/>
+        <SolidColorBrush x:Key="Card" Color="#FF1F222B"/>
+        <SolidColorBrush x:Key="CardHover" Color="#FF262A35"/>
+        <SolidColorBrush x:Key="Sidebar" Color="#FF101217"/>
+        <SolidColorBrush x:Key="Muted" Color="#FF8C93A3"/>
+
+        <!-- Élément du menu latéral -->
+        <Style x:Key="NavItem" TargetType="RadioButton">
+            <Setter Property="GroupName" Value="Nav"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" CornerRadius="12" Padding="14,10" Background="Transparent">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="Glyph" Text="{TemplateBinding Tag}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                           FontSize="16" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#14FFFFFF"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2E4F7CFF"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                <Setter TargetName="Glyph" Property="Foreground" Value="#8FA8FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Boutons -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="{StaticResource Accent}"/>
+            <Setter Property="Padding" Value="18,9"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="18" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#1AFFFFFF"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Padding" Value="14,7"/>
+        </Style>
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Foreground" Value="#FF8A8A"/>
+            <Setter Property="Background" Value="#22EF4444"/>
+        </Style>
+
+        <!-- Boutons de la barre de titre -->
+        <Style x:Key="CaptionButton" TargetType="Button">
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="shell:WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1AFFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CloseCaptionButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E81123"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Interrupteur façon Android -->
+        <Style x:Key="Switch" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid Width="46" Height="26" Background="Transparent">
+                            <Border x:Name="Track" CornerRadius="13" Background="#33FFFFFF"/>
+                            <Ellipse x:Name="Knob" Width="18" Height="18" Fill="#FFB8BEC9" HorizontalAlignment="Left" Margin="4,0,0,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="Knob" Property="Fill" Value="White"/>
+                                <Setter TargetName="Knob" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="Knob" Property="Margin" Value="0,0,4,0"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Segment Icône / Panneau -->
+        <Style x:Key="Segment" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="12" Padding="12,5" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="Tag" Value="On">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Card}"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="Padding" Value="18,16"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="BorderBrush" Value="#12FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- Carte d'action cliquable (import / export) -->
+        <Style x:Key="ActionCard" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{StaticResource Card}" CornerRadius="18" Padding="18,16" Margin="0,0,12,12"
+                                BorderBrush="#12FFFFFF" BorderThickness="1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardHover}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#554F7CFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="IconBubble" TargetType="Border">
+            <Setter Property="Width" Value="42"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Background" Value="#2E4F7CFF"/>
+            <Setter Property="Margin" Value="0,0,16,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="Glyph" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="#8FA8FF"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style x:Key="CardText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,3,0,0"/>
+        </Style>
+        <Style x:Key="Badge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="7,1"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Background" Value="#33F59E0B"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ===== Barre latérale ===== -->
+        <Border Background="{StaticResource Sidebar}">
+            <DockPanel Margin="16,0,16,16">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Height="44" Margin="4,10,0,18">
+                    <Image x:Name="Logo" Width="34" Height="34" VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <StackPanel VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock Text="BetterFences" FontSize="17" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="VersionText" FontSize="11.5" Foreground="{StaticResource Muted}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button DockPanel.Dock="Bottom" Style="{StaticResource GhostButton}" Click="OnQuit"
+                        HorizontalAlignment="Stretch" Margin="0,8,0,0" ToolTip="Ferme les dossiers et quitte BetterFences">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE7E8;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Quitter BetterFences"/>
+                    </StackPanel>
+                </Button>
+
+                <StackPanel>
+                    <RadioButton x:Name="NavFolders" Style="{StaticResource NavItem}" Tag="&#xE8B7;" Content="Dossiers" IsChecked="True" Checked="OnNav"/>
+                    <RadioButton x:Name="NavTransfer" Style="{StaticResource NavItem}" Tag="&#xE8AB;" Content="Importer et exporter" Checked="OnNav"/>
+                    <RadioButton x:Name="NavSettings" Style="{StaticResource NavItem}" Tag="&#xE713;" Content="Paramètres" Checked="OnNav"/>
+                    <RadioButton x:Name="NavAbout" Style="{StaticResource NavItem}" Tag="&#xE946;" Content="À propos" Checked="OnNav"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ===== Contenu ===== -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" Click="OnMinimize"/>
+                <Button x:Name="MaxButton" Style="{StaticResource CaptionButton}" Content="&#xE922;" Click="OnMaximize"/>
+                <Button Style="{StaticResource CloseCaptionButton}" Content="&#xE8BB;" Click="OnClose"/>
+            </StackPanel>
+
+            <DockPanel Grid.Row="1" Margin="36,0,36,18">
+                <Button x:Name="NewFolderButton" DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Click="OnNewFolder" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Nouveau dossier"/>
+                    </StackPanel>
+                </Button>
+                <StackPanel>
+                    <TextBlock x:Name="PageTitle" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="PageSubtitle" FontSize="13" Foreground="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </DockPanel>
+
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="36,0,24,24">
+                <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                </ScrollViewer.Resources>
+                <Grid>
+                    <!-- Dossiers -->
+                    <StackPanel x:Name="FoldersPage">
+                        <Border x:Name="EmptyState" Style="{StaticResource CardBorder}" Padding="24" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource CardText}" FontSize="14" TextAlignment="Center"
+                                       Text="Aucun dossier pour l'instant. Créez-en un, ou importez vos fences depuis « Importer et exporter »."/>
+                        </Border>
+                        <ItemsControl x:Name="FolderList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource CardBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Aperçu 2×2 façon dossier Android -->
+                                            <Border Width="58" Height="58" CornerRadius="18" Background="{Binding Folder.SoftAccentBrush}"
+                                                    Margin="0,0,18,0" Padding="7" VerticalAlignment="Center">
+                                                <ItemsControl ItemsSource="{Binding Folder.PreviewItems}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate><UniformGrid Rows="2" Columns="2"/></ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Image Source="{Binding Icon}" Width="18" Height="18" Margin="1"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="9" Height="9" Fill="{Binding Folder.AccentBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                    <TextBlock Style="{StaticResource CardTitle}" Text="{Binding Folder.Name}"/>
+                                                </StackPanel>
+                                                <TextBlock Style="{StaticResource CardText}" Text="{Binding Summary}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border CornerRadius="14" Background="#14FFFFFF" Padding="2" Margin="0,0,12,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Button Style="{StaticResource Segment}" Content="Icône" Tag="{Binding IconTag}" Click="OnModeIcon"
+                                                                ToolTip="Une tuile qui s'ouvre en popup"/>
+                                                        <Button Style="{StaticResource Segment}" Content="Panneau" Tag="{Binding PanelTag}" Click="OnModePanel"
+                                                                ToolTip="Un panneau toujours ouvert sur le bureau"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Button Style="{StaticResource GhostButton}" Click="OnColor" ToolTip="Couleur" Margin="0,0,6,0">
+                                                    <Ellipse Width="14" Height="14" Fill="{Binding Folder.AccentBrush}"/>
+                                                </Button>
+                                                <Button Style="{StaticResource GhostButton}" Click="OnRename" ToolTip="Renommer" Margin="0,0,6,0">
+                                                    <TextBlock Text="&#xE8AC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                                </Button>
+                                                <Button Style="{StaticResource GhostButton}" Click="OnRecenter" Margin="0,0,6,0"
+                                                        ToolTip="Ramener le dossier au centre de l'écran">
+                                                    <TextBlock Text="&#xE759;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                                </Button>
+                                                <Button Style="{StaticResource DangerButton}" Click="OnDelete"
+                                                        ToolTip="Supprimer (les raccourcis reviennent sur le bureau)">
+                                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Importer et exporter -->
+                    <UniformGrid x:Name="TransferPage" Columns="2" VerticalAlignment="Top" Visibility="Collapsed">
+                        <Button Style="{StaticResource ActionCard}" Click="OnImportFences">
+                            <DockPanel>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xE8B5;"/></Border>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Importer depuis Fences"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Chaque fence devient un dossier, avec ses onglets."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionCard}" Click="OnImportFolder">
+                            <DockPanel>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xE838;"/></Border>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Importer un dossier Windows"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Crée un dossier BetterFences avec le contenu d'un dossier."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionCard}" Click="OnExport">
+                            <DockPanel>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xEDE1;"/></Border>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Exporter ma configuration"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Un fichier .zip avec vos dossiers et raccourcis, à garder ou à copier sur un autre PC."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionCard}" Click="OnImportConfig">
+                            <DockPanel>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xE896;"/></Border>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Importer une configuration"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Restaure un export : remplacer tout ou ajouter aux dossiers actuels."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+                        <Button Style="{StaticResource ActionCard}" Click="OnOpenData">
+                            <DockPanel>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xE8DA;"/></Border>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Ouvrir le dossier des données"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Configuration, sauvegardes et raccourcis rangés."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Button>
+                    </UniformGrid>
+
+                    <!-- Paramètres -->
+                    <StackPanel x:Name="SettingsPage" Visibility="Collapsed">
+                        <Border Style="{StaticResource CardBorder}">
+                            <DockPanel>
+                                <CheckBox x:Name="StartupSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Click="OnStartupToggle"/>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xE7E8;"/></Border>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Lancer avec Windows"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Démarrage rapide : une tâche planifiée lance BetterFences dès l'ouverture de session, sans le délai que Windows impose aux programmes de démarrage."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
+                            <DockPanel>
+                                <CheckBox x:Name="ShellMenuSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Click="OnShellMenuToggle"/>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xE8A7;"/></Border>
+                                <StackPanel Margin="0,0,16,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource CardTitle}" Text="Menu contextuel de l'Explorateur"/>
+                                        <Border Style="{StaticResource Badge}"><TextBlock Text="Administrateur" FontSize="11" Foreground="#FBBF24"/></Border>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Clic droit sur le bureau : « Nouveau dossier BetterFences ». Clic droit sur un dossier : « Importer dans BetterFences »."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
+                            <DockPanel>
+                                <CheckBox x:Name="LockSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Click="OnLockToggle"/>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xE72E;"/></Border>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Verrouiller les positions"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Empêche de déplacer ou de redimensionner les dossiers par erreur."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
+                            <DockPanel>
+                                <CheckBox x:Name="HideSwitch" DockPanel.Dock="Right" Style="{StaticResource Switch}" Click="OnHideToggle"/>
+                                <Border Style="{StaticResource IconBubble}"><TextBlock Style="{StaticResource Glyph}" Text="&#xED1A;"/></Border>
+                                <StackPanel Margin="0,0,16,0">
+                                    <TextBlock Style="{StaticResource CardTitle}" Text="Masquer les dossiers"/>
+                                    <TextBlock Style="{StaticResource CardText}" Text="Cache temporairement tous les dossiers du bureau (l'icône de notification rouvre cette fenêtre pour les réafficher)."/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- À propos -->
+                    <StackPanel x:Name="AboutPage" Visibility="Collapsed">
+                        <Border Style="{StaticResource CardBorder}" Padding="26,24">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image x:Name="AboutLogo" Width="64" Height="64" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <StackPanel VerticalAlignment="Center" Margin="18,0,0,0">
+                                        <TextBlock Text="BetterFences" FontSize="22" FontWeight="SemiBold"/>
+                                        <TextBlock x:Name="AboutVersion" Style="{StaticResource CardText}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource CardText}" FontSize="13.5" Margin="0,18,0,0"
+                                           Text="Des dossiers d'applications façon Android pour le bureau Windows : onglets, sous-onglets, glisser-déposer, mode icône ou panneau. Vos raccourcis ne sont jamais supprimés : supprimer un dossier les remet sur le bureau."/>
+                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                    <Button Style="{StaticResource PrimaryButton}" Click="OnGitHub" Margin="0,0,10,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE774;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="Page GitHub et mises à jour"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource GhostButton}" Click="OnOpenLog" Content="Journal des erreurs"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

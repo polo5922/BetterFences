@@ -28,12 +28,13 @@
 - **Rangement du bureau** : les raccourcis déposés sont déplacés dans `%AppData%\BetterFences\Items` et restaurés à leur emplacement d'origine si vous supprimez le dossier. Aucun fichier n'est jamais supprimé.
 - **Import depuis Fences** : retrouve vos fences, leurs onglets et leurs positions. La configuration Fences est seulement lue, jamais modifiée.
 - **Import d'un dossier Windows** : crée un dossier BetterFences à partir de n'importe quel répertoire.
-- **Menu contextuel de l'Explorateur** : clic droit sur le bureau → *Nouveau dossier BetterFences* (créé sous la souris), clic droit sur un dossier → *Importer dans BetterFences*. Sous Windows 11, ces entrées sont dans *Afficher plus d'options*. Elles sont ajoutées pour toute la machine, ce qui demande une fois l'autorisation administrateur (à l'installation, ou depuis la zone de notification).
+- **Menu contextuel de l'Explorateur** : clic droit sur le bureau → *Nouveau dossier BetterFences* (créé sous la souris), clic droit sur un dossier → *Importer dans BetterFences*. Sous Windows 11, ces entrées sont dans *Afficher plus d'options*. Elles sont ajoutées pour toute la machine, ce qui demande une fois l'autorisation administrateur (à l'installation, ou depuis *Paramètres* dans la fenêtre BetterFences).
 - **Renommer d'un double-clic** : sur le nom d'un dossier, d'un onglet ou d'un sous-onglet.
 - **Export / import de la configuration** : une archive `.zip` avec vos dossiers et les raccourcis rangés, pour une sauvegarde ou un autre PC. À l'import, remplacez la configuration actuelle (sauvegardée d'abord) ou ajoutez-y les dossiers.
 - **Collé au bureau** : les dossiers restent visibles après *Win + D* et n'apparaissent ni dans la barre des tâches ni dans *Alt + Tab*.
 - **Icônes nettes** : chaque icône est chargée dans sa plus grande taille disponible, y compris pour les raccourcis Steam ou Ubisoft.
-- **Zone de notification** : nouveau dossier, verrouillage des positions, masquer/afficher, imports, lancement avec Windows.
+- **Fenêtre BetterFences** : tout se gère au même endroit (liste des dossiers, mode icône/panneau, couleur, imports et exports, paramètres). Elle s'ouvre depuis le menu Démarrer ou d'un clic sur l'icône de la zone de notification.
+- **Démarrage rapide** : le lancement avec Windows passe par une tâche planifiée à l'ouverture de session, sans le délai que Windows impose aux programmes de démarrage classiques ; l'appli est précompilée (ReadyToRun).
 
 | Mode panneau | Mode icône |
 | :---: | :---: |
@@ -53,15 +54,15 @@ Au premier lancement, si une configuration Fences est trouvée, BetterFences pro
 
 | Action | Comment |
 | --- | --- |
-| Créer un dossier | Clic droit sur le bureau → *Nouveau dossier BetterFences*, ou via l'icône de la zone de notification |
+| Créer un dossier | Clic droit sur le bureau → *Nouveau dossier BetterFences*, ou *Nouveau dossier* dans la fenêtre BetterFences |
 | Ajouter des applis | Glisser-déposer depuis le bureau ou l'Explorateur |
 | Lancer une appli | Clic sur son icône |
 | Déplacer un dossier | Glisser sa barre de titre (ou sa tuile en mode icône) |
 | Passer en mode icône / panneau, renommer, couleur, onglets | Clic droit sur le dossier ou le bouton `⋮` |
 | Renommer un dossier, un onglet, un sous-onglet | Double-clic sur son nom |
 | Réduire un panneau | Double-clic sur sa barre de titre, à côté du nom |
-| Sauvegarder / restaurer sa configuration | Zone de notification → *Exporter ma configuration…* / *Importer une configuration…* |
-| Masquer tous les dossiers | Double-clic sur l'icône de la zone de notification |
+| Sauvegarder / restaurer sa configuration | Fenêtre BetterFences → *Importer et exporter* |
+| Masquer tous les dossiers | Clic droit sur l'icône de la zone de notification → *Masquer les dossiers* |
 
 Les données (configuration et raccourcis rangés) sont dans `%AppData%\BetterFences`. Elles sont conservées si vous désinstallez l'application.
 

@@ -36,6 +36,12 @@ public partial class App : Application
             Shutdown(code);
             return;
         }
+        // Utilisé par l'installateur : crée ou retire la tâche de démarrage, puis quitte.
+        if (StartupService.HandleArgs(e.Args) is int startupCode)
+        {
+            Shutdown(startupCode);
+            return;
+        }
         // Une instance par dossier de données (BETTERFENCES_DATA permet une instance de test à côté).
         // Hachage stable (string.GetHashCode change à chaque processus).
         var suffix = IsTestInstance
@@ -46,16 +52,10 @@ public partial class App : Application
         _mutex = new Mutex(true, @"Local\BetterFences.SingleInstance" + suffix, out bool first);
         if (!first)
         {
-            // Lancée depuis le menu contextuel : on transmet la commande à l'instance ouverte.
-            if (e.Args.Length > 0)
-            {
-                NativeMethods.AllowSetForegroundWindow(-1);
-                InstanceChannel.Send(e.Args);
-                Shutdown();
-                return;
-            }
-            MessageBox.Show("BetterFences est déjà lancé (icône dans la zone de notification).", "BetterFences",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            // Commande du menu contextuel, ou simple relance : l'instance ouverte s'en charge
+            // (sans argument, elle affiche sa fenêtre de gestion).
+            NativeMethods.AllowSetForegroundWindow(-1);
+            InstanceChannel.Send(e.Args.Length > 0 ? e.Args : new[] { ShowArg });
             Shutdown();
             return;
         }
@@ -75,13 +75,45 @@ public partial class App : Application
         _tray = new TrayIcon(this);
         foreach (var f in Config.Folders) ShowFolder(f);
         InstanceChannel.Listen(HandleCommand);
-        if (!IsTestInstance) ShellMenu.RemoveLegacyUserKeys();
+        if (!IsTestInstance)
+        {
+            ShellMenu.RemoveLegacyUserKeys();
+            // Ancien démarrage par la clé Run → tâche planifiée (hors du fil de l'interface).
+            System.Threading.Tasks.Task.Run(StartupService.MigrateLegacy);
+        }
 
         if (Snapshot.Directory != null) Snapshot.Run(this);
         else if (firstRun) Dispatcher.BeginInvoke(FirstRun, DispatcherPriority.ApplicationIdle);
-        if (e.Args.Length > 0)
+        // Lancement manuel (raccourci du menu Démarrer, fin d'installation) : on ouvre la gestion.
+        // Au démarrage de Windows (tâche planifiée), l'appli reste discrète.
+        if (e.Args.Contains(ShowArg))
+            Dispatcher.BeginInvoke(ShowManager, DispatcherPriority.ApplicationIdle);
+        else if (e.Args.Length > 0)
             Dispatcher.BeginInvoke(() => HandleCommand(e.Args), DispatcherPriority.ApplicationIdle);
     }
+
+    public const string ShowArg = "--show";
+
+    private ManagerWindow? _manager;
+
+    /// <summary>Ouvre (ou ramène au premier plan) la fenêtre de gestion.</summary>
+    public void ShowManager()
+    {
+        if (_manager == null)
+        {
+            _manager = new ManagerWindow();
+            _manager.Closed += (_, _) => _manager = null;
+            _manager.Show();
+        }
+        if (_manager.WindowState == WindowState.Minimized) _manager.WindowState = WindowState.Normal;
+        _manager.Activate();
+        _manager.Topmost = true;  // passe devant la fenêtre active, puis redevient normale
+        _manager.Topmost = false;
+        _manager.Focus();
+    }
+
+    /// <summary>Met à jour la fenêtre de gestion après un changement fait ailleurs (menus des dossiers).</summary>
+    public void RefreshManager() => _manager?.Refresh();
 
     /// <summary>Instance de test (BETTERFENCES_DATA) : ne touche pas au registre de l'utilisateur.</summary>
     public static bool IsTestInstance => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BETTERFENCES_DATA"));
@@ -89,7 +121,9 @@ public partial class App : Application
     /// <summary>Commandes reçues en ligne de commande (menu contextuel de l'Explorateur).</summary>
     private void HandleCommand(string[] args)
     {
-        if (args[0] == ShellMenu.NewFolderArg)
+        if (args[0] == ShowArg)
+            ShowManager();
+        else if (args[0] == ShellMenu.NewFolderArg)
             NewFolderAtCursor();
         else if (args[0] == ShellMenu.ImportFolderArg && args.Length > 1 && Directory.Exists(args[1]))
             ImportWindowsFolder(args[1]);
