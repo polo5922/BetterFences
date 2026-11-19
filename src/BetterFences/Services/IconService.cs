@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using BetterFences.Interop;
 using BetterFences.Models;
 using static BetterFences.Interop.NativeMethods;
 
@@ -42,6 +45,8 @@ public static class IconService
         while (Pending.Count > 0 && sw.ElapsedMilliseconds < 40)
         {
             var item = Pending.Dequeue();
+            // Cible disparue après une mise à jour de l'appli : on recâble le raccourci avant de lire l'icône.
+            if (ShortcutRepair.TryRepair(item)) Invalidate(item.Path);
             item.SetIcon(Get(item.Path));
         }
         if (Pending.Count > 0) Schedule();
@@ -54,6 +59,11 @@ public static class IconService
         try { img = IconSource.Load(path); } catch { /* repli ci-dessous */ }
         if (img == null)
         {
+            // Raccourci sans chemin (appli du Store, ex. Xbox) : icône de la cible elle-même.
+            try { img = FromLinkTarget(path, IconSize); } catch { /* repli ci-dessous */ }
+        }
+        if (img == null)
+        {
             try { img = FromShellItem(path, IconSize); } catch { /* repli ci-dessous */ }
         }
         if (img == null)
@@ -64,9 +74,51 @@ public static class IconService
         return img;
     }
 
+    /// <summary>Icône de la cible d'un raccourci qui n'a pas de chemin de fichier (liste d'identifiants du Shell).</summary>
+    private static ImageSource? FromLinkTarget(string path, int size)
+    {
+        if (!path.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase)) return null;
+        var link = (IShellLinkW)new CShellLink();
+        IntPtr pidl = IntPtr.Zero;
+        try
+        {
+            ((IPersistFile)link).Load(path, 0);
+            var sb = new StringBuilder(1024);
+            link.GetPath(sb, sb.Capacity, IntPtr.Zero, 0);
+            if (sb.Length > 0) return null; // cible fichier : géré par IconSource / le Shell
+            link.GetIDList(out pidl);
+            if (pidl == IntPtr.Zero) return null;
+
+            // Appli du Store : la cible est « IdentifiantPaquet!Appli ». Le Shell ne rend son logo
+            // que depuis shell:AppsFolder (via le raccourci, il renvoie une icône de fichier vide).
+            if (ShellLinkNative.SHGetNameFromIDList(pidl, ShellLinkNative.SIGDN_PARENTRELATIVEPARSING, out var namePtr) == 0)
+            {
+                string name = Marshal.PtrToStringUni(namePtr) ?? "";
+                ShellLinkNative.CoTaskMemFree(namePtr);
+                if (name.Contains('!'))
+                {
+                    try { return FromShellItem(@"shell:AppsFolder\" + name, size); }
+                    catch { /* repli ci-dessous */ }
+                }
+            }
+            ShellLinkNative.SHCreateItemFromIDList(pidl, typeof(IShellItemImageFactory).GUID, out var factory);
+            return FromFactory(factory, size);
+        }
+        finally
+        {
+            if (pidl != IntPtr.Zero) ShellLinkNative.CoTaskMemFree(pidl);
+            Marshal.ReleaseComObject(link);
+        }
+    }
+
     private static ImageSource? FromShellItem(string path, int size)
     {
         SHCreateItemFromParsingName(path, IntPtr.Zero, typeof(IShellItemImageFactory).GUID, out var factory);
+        return FromFactory(factory, size);
+    }
+
+    private static ImageSource? FromFactory(IShellItemImageFactory factory, int size)
+    {
         try
         {
             int hr = factory.GetImage(new SIZE { cx = size, cy = size }, SIIGBF.BiggerSizeOk | SIIGBF.IconOnly, out var hbm);

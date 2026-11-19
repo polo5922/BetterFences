@@ -75,6 +75,7 @@ public partial class App : Application
         _tray = new TrayIcon(this);
         foreach (var f in Config.Folders) ShowFolder(f);
         InstanceChannel.Listen(HandleCommand);
+        RepairShortcutsInBackground();
         if (!IsTestInstance)
         {
             ShellMenu.RemoveLegacyUserKeys();
@@ -90,6 +91,27 @@ public partial class App : Application
             Dispatcher.BeginInvoke(ShowManager, DispatcherPriority.ApplicationIdle);
         else if (e.Args.Length > 0)
             Dispatcher.BeginInvoke(() => HandleCommand(e.Args), DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>
+    /// Recâble, hors du fil de l'interface, les raccourcis dont l'appli a changé de dossier en se mettant à jour,
+    /// y compris ceux des onglets jamais affichés, puis rafraîchit leur icône.
+    /// </summary>
+    private void RepairShortcutsInBackground()
+    {
+        var items = Config.Folders.SelectMany(f => f.AllItems).ToList();
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            foreach (var item in items)
+            {
+                if (!ShortcutRepair.TryRepair(item)) continue;
+                Dispatcher.BeginInvoke(() =>
+                {
+                    IconService.Invalidate(item.Path);
+                    item.SetIcon(IconService.Get(item.Path));
+                });
+            }
+        });
     }
 
     public const string ShowArg = "--show";

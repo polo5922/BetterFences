@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Windows.Media.Imaging;
+using BetterFences.Interop;
 
 namespace BetterFences.Services;
 
@@ -181,26 +182,4 @@ internal static class IconSource
     [DllImport("kernel32.dll")] private static extern IntPtr LoadResource(IntPtr module, IntPtr res);
     [DllImport("kernel32.dll")] private static extern IntPtr LockResource(IntPtr data);
     [DllImport("kernel32.dll")] private static extern uint SizeofResource(IntPtr module, IntPtr res);
-
-    [ComImport, Guid("00021401-0000-0000-C000-000000000046")]
-    private class CShellLink { }
-
-    [ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("000214F9-0000-0000-C000-000000000046")]
-    private interface IShellLinkW
-    {
-        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder file, int cch, IntPtr findData, uint flags);
-        void GetIDList(out IntPtr pidl);
-        void SetIDList(IntPtr pidl);
-        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name, int cch);
-        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
-        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder dir, int cch);
-        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string dir);
-        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder args, int cch);
-        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string args);
-        void GetHotkey(out short hotkey);
-        void SetHotkey(short hotkey);
-        void GetShowCmd(out int showCmd);
-        void SetShowCmd(int showCmd);
-        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath, int cch, out int iconIndex);
-    }
 }

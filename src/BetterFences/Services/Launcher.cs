@@ -12,6 +12,11 @@ public static class Launcher
     {
         try
         {
+            if (ShortcutRepair.TryRepair(item))
+            {
+                IconService.Invalidate(item.Path);
+                item.SetIcon(IconService.Get(item.Path));
+            }
             var psi = new ProcessStartInfo(item.Path) { UseShellExecute = true };
             if (asAdmin) psi.Verb = "runas";
             Process.Start(psi);
