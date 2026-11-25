@@ -10,7 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><b>⬇ Télécharger l'installateur</b></a>
+  <a href="../../releases/latest"><b>⬇ Télécharger l'installateur</b></a> ·
+  <a href="https://paul-barbaux.dev/marketplace/betterfences"><b>Voir sur la Marketplace</b></a>
 </p>
 
 ![BetterFences sur le bureau](docs/images/hero.png)
